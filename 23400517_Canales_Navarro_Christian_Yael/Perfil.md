@@ -8,10 +8,18 @@
 - Número de control: 23400517
 
 ## Intereses
-- Inteligencia Artificial (ClaudeCode, OpenCode, Gemini, ChatGPT, Gamma)
+- Inteligencia Artificial
 - Desarrollo Frontend
 - Desarrollo Backend
 - Desarrollo Movil
+
+## Tecnologías
+- Lenguajes: Java
+- Bases de datos: SQL Server, MongoDB
+
+## Cómo conctactarme
+- Correo: chyacanalesna@ittepic.edu.mx 
+- Celular: 3111152660
 
 # Recomendación
 - Severance
