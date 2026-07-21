@@ -54,6 +54,11 @@ const serieSchema = new mongoose.Schema(
 const Pelicula = mongoose.model('Pelicula', peliculaSchema);
 const Serie = mongoose.model('Serie', serieSchema);
 
+app.get("/", (req, res) => {
+    res.send("API de películas y series");
+});
+
+
 app.get('/peliculas', async (req, res) => {
     try {
         const peliculas = await Pelicula.find();
