@@ -4,12 +4,12 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 
 const app = express();
-app.use(express.json());
 const port = 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(express.static(__dirname));
 
 mongoose.connect("mongodb+srv://grupo:grupo@servidorprueba.ygegryf.mongodb.net/netflix")
 .then(() => {
@@ -56,10 +56,6 @@ const serieSchema = new mongoose.Schema(
 
 const Pelicula = mongoose.model('Pelicula', peliculaSchema);
 const Serie = mongoose.model('Serie', serieSchema);
-
-app.get("/", (req, res) => {
-    res.send("API de películas y series");
-});
 
 
 app.get('/peliculas', async (req, res) => {
