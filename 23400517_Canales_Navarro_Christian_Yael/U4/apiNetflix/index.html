@@ -1,116 +1,468 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
-    <title>Consumir API REST</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix - Catálogo Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <style>
+        :root {
+            --bg-color: #141414;
+            --card-bg: #181818;
+            --red-netflix: #E50914;
+            --red-hover: #F40612;
+            --text-white: #FFFFFF;
+            --text-gray: #AAAAAA;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
         body {
-            font-family: Arial, Helvetica, sans-serif;
-            width: 600px;
-            margin: 30px auto;
+            background-color: var(--bg-color);
+            color: var(--text-white);
+            overflow-x: hidden;
+            padding-bottom: 80px;
         }
 
-        input {
-            display: block;
+        /* QUITAMOS FLECHAS EN INPUT NUMERICOS */
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: fixed;
+            top: 0;
             width: 100%;
-            padding: 8px;
-            margin: 10px 0;
+            height: 70px;
+            padding: 0 4%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 100%);
+            z-index: 1000;
+            transition: background-color 0.4s ease;
         }
 
-        button {
-            padding: 10px 15px;
-            margin: 10px 0;
+        .navbar.scrolled {
+            background-color: var(--bg-color);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .logo {
+            color: var(--red-netflix);
+            font-size: 2.1rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+        }
+
+        .nav-item {
+            color: #e5e5e5;
+            font-size: 0.9rem;
             cursor: pointer;
+            transition: color 0.3s;
         }
 
-        ul {
-            margin-top: 20px;
+        .nav-item:hover, .nav-item.active {
+            color: #fff;
+            font-weight: 700;
         }
 
-        li {
-            margin: 8px 0;
+        .btn-add-movie {
+            background-color: var(--red-netflix);
+            color: white;
+            border: none;
+            padding: 9px 20px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-add-movie:hover {
+            background-color: var(--red-hover);
+            transform: scale(1.03);
+        }
+
+        /* HERO BANNER */
+        .hero {
+            position: relative;
+            height: 70vh;
+            min-height: 480px;
+            background: linear-gradient(0deg, var(--bg-color) 0%, rgba(20,20,20,0.2) 60%, rgba(0,0,0,0.7) 100%), 
+                        url('https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=1600&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center 30%;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 4% 90px;
+        }
+
+        .hero-info { max-width: 650px; z-index: 2; }
+        .hero-title { font-size: 3.5rem; font-weight: 900; line-height: 1.05; margin-bottom: 15px; }
+        .hero-desc { font-size: 1rem; color: #ddd; margin-bottom: 25px; line-height: 1.5; }
+
+        .btn-hero {
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: #fff;
+            color: #000;
+        }
+
+        /* CATÁLOGO CONTAINER */
+        .content-container {
+            padding: 0 4%;
+            margin-top: -50px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .row-title { font-size: 1.5rem; font-weight: 700; }
+
+        .stats-info {
+            font-size: 0.85rem;
+            color: var(--text-gray);
+            background: rgba(255,255,255,0.05);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stats-info strong { color: #fff; }
+
+        /* CARDS GRID */
+        #listaContenido {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 20px;
+            list-style: none;
+        }
+
+        .movie-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.35s ease;
+            cursor: pointer;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .movie-card:hover {
+            transform: translateY(-8px) scale(1.04);
+            z-index: 30;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.9);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .poster-wrapper {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            background: #222;
+        }
+
+        .poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .movie-card:hover .poster-img { transform: scale(1.08); }
+
+        .rating-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
+            color: #46d369;
+            font-weight: 800;
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .movie-details {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: linear-gradient(180deg, #181818 0%, #111111 100%);
+        }
+
+        .movie-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .movie-tags {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            color: var(--text-gray);
+            margin-bottom: 4px;
+        }
+
+        .movie-subtags {
+            font-size: 0.72rem;
+            color: #26a69a;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .tag-hd {
+            border: 1px solid var(--text-gray);
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+
+        .card-actions { display: flex; gap: 10px; }
+
+        .btn-card {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-edit { background: #333; color: white; }
+        .btn-delete { background: var(--red-netflix); color: white; }
+
+        /* MODAL */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-box {
+            background: #181818;
+            width: 100%; max-width: 580px;
+            border-radius: 10px;
+            padding: 35px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #2a2a2a;
+            padding-bottom: 15px;
+        }
+
+        .close-btn { background: transparent; border: none; color: var(--text-gray); font-size: 1.8rem; cursor: pointer; }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-gray); text-transform: uppercase; margin-bottom: 6px; }
+        
+        input {
+            width: 100%; padding: 12px 14px;
+            background: #2a2a2a; border: 1px solid #3a3a3a;
+            border-radius: 6px; color: #fff; font-size: 0.95rem;
+        }
+
+        input:focus { outline: none; border-color: var(--red-netflix); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+        .btn-submit {
+            width: 100%; background: var(--red-netflix); color: white;
+            padding: 14px; border: none; border-radius: 6px;
+            font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 15px;
         }
     </style>
 </head>
 
 <body>
 
-    <h1>Películas</h1>
-
-    <h2>Registrar película</h2>
-
-    <form id="formulario">
-
-        <input
-            type="text"
-            id="titulo"
-            placeholder="Título"
-            required
-        >
-
-        <input
-            type="text"
-            id="genero"
-            placeholder="Género"
-            required
-        >
-
-        <input
-            type="number"
-            id="año"
-            placeholder="Año"
-            required
-        >
-
-        <input
-            type="number"
-            id="duracion"
-            placeholder="Duración"
-            required
-        >
-
-        <input
-            type="text"
-            id="idioma"
-            placeholder="Idioma"
-            required
-        >
-
-        <input
-            type="number"
-            id="calificacion"
-            placeholder="Calificación"
-            min="0"
-            max="10"
-            step="0.1"
-            required
-        >
-
-        <input
-            type="text"
-            id="nc"
-            placeholder="No. Control"
-            required
-        >
-
-        <button type="submit">
-            Guardar película
+    <!-- NAVBAR -->
+    <nav class="navbar" id="navbar">
+        <div class="brand-container">
+            <a href="#" class="logo">NETFLIX</a>
+            <ul class="nav-menu">
+                <li class="nav-item active" id="tabPeliculas">Películas</li>
+                <li class="nav-item" id="tabSeries">Series</li>
+            </ul>
+        </div>
+        <button class="btn-add-movie" id="btnAbrirModal">
+            <i class="ti ti-plus"></i> Añadir Película
         </button>
+    </nav>
 
-    </form>
+    <!-- HERO -->
+    <div class="hero">
+        <div class="hero-info">
+            <h1 class="hero-title">Gestor Netflix</h1>
+            <p class="hero-desc">Administra tu catálogo interactivo de películas y series en tiempo real.</p>
+            <button class="btn-hero" id="btnConsultar">
+                <i class="ti ti-reload"></i> Sincronizar
+            </button>
+        </div>
+    </div>
 
-    <hr>
+    <!-- CONTENIDO -->
+    <div class="content-container">
+        <div class="row-header">
+            <h2 class="row-title" id="rowTitle">Catálogo de Películas</h2>
+            <div class="stats-info">
+                Total: <strong id="statTotal">0</strong> | Promedio: <strong id="statPromedio">0</strong> ⭐
+            </div>
+        </div>
 
-    <button id="btnConsultar">
-        Consultar películas
-    </button>
+        <ul id="listaContenido"></ul>
+    </div>
 
-    <ul id="listaPeliculas"></ul>
+    <!-- MODAL FORMULARIO -->
+    <div class="modal-backdrop" id="modalForm">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modalTitulo">Añadir Nueva Película</h2>
+                <button class="close-btn" id="btnCerrarModal">&times;</button>
+            </div>
+            <form id="formulario">
+                <div class="form-group">
+                    <label for="titulo">Título</label>
+                    <input type="text" id="titulo" placeholder="Ej. Stranger Things / Inception" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="portada">URL de Portada (Imagen)</label>
+                    <input type="url" id="portada" placeholder="https://imagen.com/poster.jpg">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="genero">Género</label>
+                        <input type="text" id="genero" placeholder="Ej. Ciencia ficción" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="idioma">Idioma</label>
+                        <input type="text" id="idioma" placeholder="Ej. Inglés" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="año">Año de estreno</label>
+                        <input type="number" id="año" placeholder="2016" required>
+                    </div>
+
+                    <!-- Campo dinámico Películas -->
+                    <div class="form-group" id="campoDinamicoPeliculas">
+                        <label for="duracion">Duración (minutos)</label>
+                        <input type="number" id="duracion" placeholder="120">
+                    </div>
+                </div>
+
+                <!-- Campos dinámicos Series -->
+                <div class="form-row" id="campoDinamicoSeries" style="display: none;">
+                    <div class="form-group">
+                        <label for="temporadas">Temporadas</label>
+                        <input type="number" id="temporadas" placeholder="5">
+                    </div>
+                    <div class="form-group">
+                        <label for="episodios">Episodios</label>
+                        <input type="number" id="episodios" placeholder="42">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="calificacion">Calificación (0 - 10)</label>
+                        <input type="number" id="calificacion" placeholder="8.7" min="0" max="10" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nc">No. Control (ID Único)</label>
+                        <input type="text" id="nc" placeholder="Ej. 22400595" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnGuardar">Guardar en Catálogo</button>
+            </form>
+        </div>
+    </div>
 
     <script src="app.js"></script>
-
+    <script>
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) navbar.classList.add('scrolled');
+            else navbar.classList.remove('scrolled');
+        });
+    </script>
 </body>
-
 </html>

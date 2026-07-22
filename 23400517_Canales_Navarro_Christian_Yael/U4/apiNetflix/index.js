@@ -20,9 +20,10 @@ mongoose.connect("mongodb+srv://grupo:grupo@servidorprueba.ygegryf.mongodb.net/n
 });
 
 app.listen(port, () => {
-  console.log("Servidor iniciadio en http://localhost:" + port);
+  console.log("Servidor iniciado en http://localhost:" + port);
 });
 
+// Schemas con soporte de portada y flexibilizados
 const peliculaSchema = new mongoose.Schema(
     {
         titulo: { type: String, required: true, trim: true },
@@ -31,10 +32,12 @@ const peliculaSchema = new mongoose.Schema(
         duracion: { type: Number, required: true, min: 1 },
         idioma: { type: String, required: true, trim: true },
         calificacion: { type: Number, required: true, min: 0, max: 10 },
-        nc: { type: String, required: true, trim: true }
+        nc: { type: String, required: true, trim: true },
+        portada: { type: String, trim: true }
     },
     {
-        timestamps: true
+        timestamps: true,
+        strict: false
     }
 );
 
@@ -47,17 +50,19 @@ const serieSchema = new mongoose.Schema(
         episodios: { type: Number, required: true, min: 1 },
         idioma: { type: String, required: true, trim: true },
         calificacion: { type: Number, required: true, min: 0, max: 10 },
-        nc: { type: String, required: true, trim: true }
+        nc: { type: String, required: true, trim: true },
+        portada: { type: String, trim: true }
     },
     {
-        timestamps: true
+        timestamps: true,
+        strict: false
     }
 );
 
 const Pelicula = mongoose.model('Pelicula', peliculaSchema);
 const Serie = mongoose.model('Serie', serieSchema);
 
-
+// --- ENDPOINTS PELÍCULAS ---
 app.get('/peliculas', async (req, res) => {
     try {
         const peliculas = await Pelicula.find();
@@ -82,7 +87,7 @@ app.put('/peliculas/:id', async (req, res) => {
         const peliculaActualizada = await Pelicula.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { new: true, runValidators: false }
         );
         if (!peliculaActualizada) {
             return res.status(404).json({ mensaje: 'Película no encontrada' });
@@ -105,6 +110,7 @@ app.delete('/peliculas/:id', async (req, res) => {
     }
 });
 
+// --- ENDPOINTS SERIES ---
 app.get('/series', async (req, res) => {
     try {
         const series = await Serie.find();
@@ -129,7 +135,7 @@ app.put('/series/:id', async (req, res) => {
         const serieActualizada = await Serie.findByIdAndUpdate(
             req.params.id,
             req.body,
-            { new: true, runValidators: true }
+            { new: true, runValidators: false }
         );
         if (!serieActualizada) {
             return res.status(404).json({ mensaje: 'Serie no encontrada' });

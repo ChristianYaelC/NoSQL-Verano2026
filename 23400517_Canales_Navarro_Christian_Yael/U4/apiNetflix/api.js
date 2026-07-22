@@ -1,4 +1,4 @@
-const API_URL = "https://no-sql-verano2026-eta.vercel.app/";
+const API_URL = "http://localhost:3000";
 
 // Obtener películas
 async function obtenerPeliculas() {
